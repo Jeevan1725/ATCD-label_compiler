@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Label Compiler — Automata Theory & Compiler Design | 6-Phase Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,500;0,700;1,300&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0c10; --surface:#111318; --surface2:#16191f;
+  --border:#1e222c; --border-bright:#2a3040;
+  --text:#c8d0e0; --text-dim:#5a6478; --text-bright:#eef2ff;
+  --accent:#4f8ef7; --accent-glow:rgba(79,142,247,0.15);
+  --green:#3dd68c; --green-glow:rgba(61,214,140,0.12);
+  --yellow:#f5c542; --red:#f76f72; --red-glow:rgba(247,111,114,0.12);
+  --purple:#b87fff; --cyan:#38d4d4; --orange:#ff9a57;
+  --amber:#e8a020; --gold:#c9a03d;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+.container{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:36px 24px 60px}
+
+/* UNIVERSITY HEADER WITH ACTUAL LOGO */
+.university-header {
+  background: linear-gradient(135deg, #0f1219 0%, #0a0c10 100%);
+  border: 1px solid var(--border-bright);
+  border-radius: 24px;
+  padding: 16px 28px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  backdrop-filter: blur(2px);
+}
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.logo-image {
+  height: 55px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0.98) contrast(1.05);
+  transition: filter 0.2s ease;
+}
+.logo-image:hover {
+  filter: brightness(1.05);
+}
+.university-text h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  background: linear-gradient(135deg, #f5e7c8, #e8a020);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.university-text p {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.course-title {
+  text-align: right;
+}
+.course-title h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: -0.2px;
+}
+.course-title span {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: monospace;
+}
+
+/* COMPILER HEADER */
+.compiler-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 32px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.logo-badge-mini {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 0 28px rgba(232,160,32,0.25);
+}
+.header-text h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-bright);
+  letter-spacing: -0.5px;
+}
+.header-text h1 span {
+  color: var(--amber);
+}
+.header-text p {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+/* TABS */
+.tabs{display:flex;gap:8px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:12px}
+.tab-btn{background:transparent;border:none;padding:8px 20px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all 0.2s;border-radius:6px}
+.tab-btn:hover{color:var(--amber);background:rgba(232,160,32,0.1)}
+.tab-btn.active{color:var(--amber);background:rgba(232,160,32,0.15);border-bottom:2px solid var(--amber)}
+
+/* TEST SUITE PANEL */
+.test-suite-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:24px;overflow:hidden}
+.test-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.test-header h3{font-family:'Syne',sans-serif;font-size:14px;color:var(--text-bright)}
+.run-all-btn{background:linear-gradient(135deg,var(--green),#2a9e5a);border:none;border-radius:8px;padding:8px 20px;color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.run-all-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(61,214,140,0.3)}
+.test-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;padding:20px}
+.test-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s}
+.test-card.passed{border-left:4px solid var(--green)}
+.test-card.failed{border-left:4px solid var(--red)}
+.test-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);cursor:pointer}
+.test-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700}
+.test-status{font-size:10px;padding:2px 8px;border-radius:12px}
+.status-pass{background:rgba(61,214,140,0.2);color:var(--green)}
+.status-fail{background:rgba(247,111,114,0.2);color:var(--red)}
+.status-pending{background:rgba(90,100,120,0.2);color:var(--text-dim)}
+.test-body{display:none;padding:16px;border-top:1px solid var(--border)}
+.test-body.show{display:block}
+.test-input{background:var(--surface);padding:12px;border-radius:8px;font-size:10px;font-family:monospace;white-space:pre-wrap;margin-bottom:12px}
+.test-results{font-size:11px}
+.test-result-item{padding:4px 0;border-bottom:1px solid var(--border)}
+.test-result-pass{color:var(--green)}
+.test-result-fail{color:var(--red)}
+
+/* PIPELINE */
+.pipeline{display:flex;align-items:center;margin-bottom:24px;overflow-x:auto;padding-bottom:4px;gap:0}
+.pipe-step{display:flex;align-items:center;flex-shrink:0}
+.pipe-label{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 11px;font-size:10px;color:var(--text-dim);white-space:nowrap;transition:all .3s}
+.pipe-label.active{border-color:var(--amber);color:var(--amber);background:rgba(232,160,32,0.1)}
+.pipe-label.has-error{border-color:var(--red);color:var(--red)}
+.pipe-arrow{width:22px;height:1px;background:var(--border);position:relative}
+.pipe-arrow::after{content:'▶';position:absolute;right:-4px;top:-5px;font-size:8px;color:var(--border-bright)}
+
+/* INPUT SECTION */
+.input-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px}
+.input-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.input-label .dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.input-row{display:flex;gap:12px;align-items:flex-start}
+#code-input{flex:1;background:var(--bg);border:1px solid var(--border-bright);border-radius:10px;padding:14px 18px;color:var(--text-bright);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;resize:vertical;min-height:180px;line-height:1.7}
+#code-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,160,32,0.2)}
+.btn-col{display:flex;flex-direction:column;gap:8px}
+.compile-btn{background:linear-gradient(135deg,var(--amber),#b85c00);border:none;border-radius:10px;padding:13px 24px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:transform .15s}
+.clear-btn{background:transparent;border:1px solid var(--border-bright);border-radius:10px;padding:10px 18px;color:var(--text-dim);cursor:pointer}
+
+/* PHASE CARDS */
+.phases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+.phase-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;opacity:0;transform:translateY(14px);transition:opacity .4s,transform .4s}
+.phase-card.visible{opacity:1;transform:translateY(0)}
+.phase-header{display:flex;align-items:center;gap:11px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.phase-num{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:800}
+.phase-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text-bright)}
+.phase-subtitle{font-size:10px;color:var(--text-dim)}
+.phase-badge{margin-left:auto;font-size:9px;padding:2px 7px;border-radius:4px}
+.phase-body{padding:16px 18px;max-height:300px;overflow-y:auto}
+
+.ph1 .phase-num{background:rgba(79,142,247,0.15);color:#4f8ef7}
+.ph2 .phase-num{background:rgba(184,127,255,0.15);color:#b87fff}
+.ph3 .phase-num{background:rgba(61,214,140,0.15);color:#3dd68c}
+.ph4 .phase-num{background:rgba(232,160,32,0.15);color:#e8a020}
+.ph5 .phase-num{background:rgba(255,154,87,0.15);color:#ff9a57}
+.ph6 .phase-num{background:rgba(56,212,212,0.15);color:#38d4d4}
+
+/* PARSE TREE */
+.parse-tree-container{background:var(--bg);border-radius:8px;padding:16px;overflow-x:auto}
+.tree-root{display:inline-block;min-width:100%}
+.tree-node{display:flex;flex-direction:column;align-items:center;position:relative}
+.tree-node-content{background:var(--surface2);border:1px solid var(--border-bright);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;white-space:nowrap}
+.tree-node-content.operator{background:linear-gradient(135deg,#2a1f0a,#1a1308);border-color:var(--amber);color:var(--amber)}
+.tree-node-content.identifier{color:var(--cyan);border-color:var(--cyan)}
+.tree-node-content.literal{color:var(--green);border-color:var(--green)}
+.tree-node-content.keyword{color:var(--purple);border-color:var(--purple)}
+.tree-node-content.root{color:var(--amber);border-color:var(--amber)}
+.tree-children{display:flex;justify-content:center;gap:32px;margin-top:24px;position:relative;flex-wrap:wrap}
+.tree-children::before{content:'';position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:2px;height:12px;background:var(--border-bright)}
+.tree-child{display:flex;flex-direction:column;align-items:center;position:relative}
+.tree-child::before{content:'';position:absolute;top:-12px;left:50%;width:2px;height:12px;background:var(--border-bright)}
+.tree-legend{margin-top:16px;padding:12px;background:var(--surface);border-radius:8px;display:flex;flex-wrap:wrap;gap:16px;font-size:10px}
+
+.token-table,.symbol-table{width:100%;border-collapse:collapse;font-size:10px}
+.token-table th,.symbol-table th{text-align:left;padding:4px 6px;color:var(--text-dim);border-bottom:1px solid var(--border)}
+.token-table td,.symbol-table td{padding:4px 6px}
+.placeholder-msg{color:var(--text-dim);font-size:11px;font-style:italic;text-align:center;padding:18px 0}
+.reuse-badge{background:rgba(61,214,140,0.2);color:var(--green);border-radius:12px;padding:2px 8px;font-size:9px;display:inline-block;margin-left:6px}
+.sym-used{color:var(--green)}
+.sym-unused{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- UNIVERSITY HEADER WITH OFFICIAL LOGO -->
+  <div class="university-header">
+    <div class="logo-section">
+      <img class="logo-image" src="https://vectorseek.com/wp-content/uploads/2024/02/Amrita-Vishwa-Vidyapeetham-Horizontal-Logo-Vector.svg-.png" 
+           alt="Amrita Vishwa Vidyapeetham Logo" 
+           onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%2060%22%3E%3Crect%20width%3D%22200%22%20height%3D%2260%22%20fill%3D%22%23111318%22%2F%3E%3Ctext%20x%3D%2210%22%20y%3D%2238%22%20fill%3D%22%23e8a020%22%20font-size%3D%2218%22%20font-family%3D%22monospace%22%3EAMRITA%3C%2Ftext%3E%3C%2Fsvg%3E'; this.style.filter='brightness(0.9)'">
+      <div class="university-text">
+        <h2>AMRITA VISHWA VIDYAPEETHAM</h2>
+        <p>Deemed to be University | Accredited 'A++' by NAAC</p>
+      </div>
+    </div>
+    <div class="course-title">
+      <h3>📖 Automata Theory & Compiler Design</h3>
+      <span>CS 301 | 6-Phase Label Management System</span>
+    </div>
+  </div>
+
+  <!-- COMPILER HEADER -->
+  <div class="compiler-header">
+    <div class="logo-badge-mini">🏷️</div>
+    <div class="header-text">
+      <h1>Label <span>Compiler</span></h1>
+      <p>6-Phase Pipeline · Duplicate Prevention · Usage Tracking · Unused Label Reuse Optimization</p>
+    </div>
+  </div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('compiler')">📝 Compiler</button>
+  <button class="tab-btn" onclick="switchTab('tests')">🧪 Test Suite (12 Tests)</button>
+</div>
+
+<!-- Compiler Tab -->
+<div id="compiler-tab">
+  <div class="pipeline">
+    <div class="pipe-step"><div class="pipe-label" id="pl1">① Lexical</div><div class="pipe-arrow"></div></div>
+    <div class="pipe-step"><div class="pipe-label" id="pl2">② Syntax + Parse Tree</div><div class="pipe-arrow"></div></div>
+    <div class="pipe-step"><div class="pipe-label" id="pl3">③ Semantic / Usage</div><div class="pipe-arrow"></div></div>
+    <div class="pipe-step"><div class="pipe-label" id="pl4">④ Duplicate Check</div><div class="pipe-arrow"></div></div>
+    <div class="pipe-step"><div class="pipe-label" id="pl5">⑤ Unused Detection</div><div class="pipe-arrow"></div></div>
+    <div class="pipe-step"><div class="pipe-label" id="pl6">⑥ Reuse Opt + TAC</div></div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-label"><span class="dot"></span>C++ Source Code (with labels & goto)</div>
+    <div class="input-row">
+      <textarea id="code-input" spellcheck="false">int main() {
+    int a = 5;
+    int b = 3;
+    int x = a + b * 2;
+    int y = (a - b) * (a + b);
+    
+start:
+    if (x > y) goto cleanup;
+    x = x + 1;
+    goto start;
+    
+cleanup:
+    return x;
+}</textarea>
+      <div class="btn-col">
+        <button class="compile-btn" onclick="compile()">▶ COMPILE</button>
+        <button class="clear-btn" onclick="clearAll()">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="phases-grid" id="phases-grid"></div>
+</div>
+
+<!-- Test Suite Tab -->
+<div id="tests-tab" style="display:none">
+  <div class="test-suite-panel">
+    <div class="test-header">
+      <h3>📋 Label Management Test Suite - Validation + Reuse Logic</h3>
+      <button class="run-all-btn" onclick="runAllTests()">▶ RUN ALL TESTS</button>
+    </div>
+    <div class="test-grid" id="test-grid"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ==================== CORE COMPILER WITH LABEL MANAGEMENT & REUSE ====================
+const cppKeywords = new Set(['int','float','double','char','bool','void','string','return','if','else','while','for','goto']);
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Phase 1: Lexical Analysis
+function lexicalAnalysis(src) {
+  const lines = src.split('\n');
+  const tokens = [];
+  for (let ln = 0; ln < lines.length; ln++) {
+    const line = lines[ln];
+    let ci = 0;
+    while (ci < line.length) {
+      if (line[ci] === ' ' || line[ci] === '\t') { ci++; continue; }
+      if (line.slice(ci, ci+2) === '//') break;
+      if (line[ci] === '#') break;
+      if (line[ci] === '"') {
+        let j = ci+1;
+        while (j < line.length && line[j] !== '"') j++;
+        tokens.push({type:'STRING', val: line.slice(ci, j+1), line: ln+1});
+        ci = j+1;
+        continue;
+      }
+      if (/\d/.test(line[ci])) {
+        let j = ci;
+        while (j < line.length && /[\d.]/.test(line[j])) j++;
+        tokens.push({type:'NUMBER', val: line.slice(ci, j), line: ln+1});
+        ci = j;
+        continue;
+      }
+      if (/[a-zA-Z_]/.test(line[ci])) {
+        let j = ci;
+        while (j < line.length && /[\w]/.test(line[j])) j++;
+        const word = line.slice(ci, j);
+        const after = line.slice(j).trimStart();
+        // Label definition: identifier followed by colon and not "::"
+        if (after[0] === ':' && after[1] !== ':') {
+          tokens.push({type:'LABEL_DEF', val: word, line: ln+1});
+          ci = j;
+          continue;
+        }
+        tokens.push({type: cppKeywords.has(word) ? 'KEYWORD' : 'IDENTIFIER', val: word, line: ln+1});
+        ci = j;
+        continue;
+      }
+      const two = line.slice(ci, ci+2);
+      if (['==','!=','<=','>=','++','--','&&','||'].includes(two)) {
+        tokens.push({type:'OP', val: two, line: ln+1});
+        ci += 2;
+        continue;
+      }
+      if ('{}();,=+*-/<>!'.includes(line[ci])) {
+        tokens.push({type:'PUNCT', val: line[ci], line: ln+1});
+      }
+      ci++;
+    }
+  }
+  return tokens;
+}
+
+// Phase 2: Expression Tree for Parse Tree
+function buildExpressionTree(tokens, start, end) {
+  if (start >= end) return null;
+  let minPrec = 999, opIdx = -1, parenDepth = 0;
+  for (let i = start; i < end; i++) {
+    const t = tokens[i];
+    if (t.val === '(') parenDepth++;
+    if (t.val === ')') parenDepth--;
+    if (parenDepth > 0) continue;
+    let prec = -1;
+    if (t.type === 'OP' && (t.val === '+' || t.val === '-')) prec = 1;
+    else if (t.type === 'OP' && (t.val === '*' || t.val === '/')) prec = 2;
+    if (prec !== -1 && prec <= minPrec) { minPrec = prec; opIdx = i; }
+  }
+  if (opIdx !== -1) {
+    return { name: tokens[opIdx].val, type: "operator", children: [buildExpressionTree(tokens, start, opIdx), buildExpressionTree(tokens, opIdx + 1, end)].filter(c => c) };
+  }
+  if (tokens[start]?.val === '(' && tokens[end-1]?.val === ')') return buildExpressionTree(tokens, start + 1, end - 1);
+  if (start + 1 === end) {
+    const t = tokens[start];
+    return { name: t.val, type: t.type === 'NUMBER' ? "literal" : "identifier" };
+  }
+  return { name: "expr", type: "expression" };
+}
+
+function buildParseTree(tokens) {
+  const root = { name: "TranslationUnit", type: "root", children: [] };
+  const significant = tokens.filter(t => t.type !== 'STRING');
+  for (let i = 0; i < significant.length; i++) {
+    const t = significant[i];
+    if (t.type === 'KEYWORD' && t.val === 'int' && significant[i+1]?.type === 'IDENTIFIER' && significant[i+2]?.val === '(') {
+      root.children.push({ name: "Function: " + significant[i+1].val, type: "function" });
+    }
+    if (t.type === 'LABEL_DEF') {
+      root.children.push({ name: "Label: " + t.val, type: "label" });
+    }
+    if (t.type === 'IDENTIFIER' && significant[i+1]?.val === '=') {
+      let j = i+2, exprTokens = [];
+      while (j < significant.length && significant[j].val !== ';') exprTokens.push(significant[j++]);
+      const exprTree = buildExpressionTree(exprTokens, 0, exprTokens.length);
+      if (exprTree) root.children.push({ name: "Assignment", type: "assign", children: [{ name: t.val, type: "identifier" }, exprTree] });
+    }
+  }
+  return root;
+}
+
+// Main compilation with full label tracking
+function compileFull(src) {
+  const tokens = lexicalAnalysis(src);
+  
+  // Collect label definitions
+  const labelDefs = tokens.filter(t => t.type === 'LABEL_DEF');
+  const labelDefMap = new Map();
+  labelDefs.forEach(def => { labelDefMap.set(def.val, (labelDefMap.get(def.val) || 0) + 1); });
+  
+  // Goto usages
+  const gotoUsages = [];
+  for (let i = 0; i < tokens.length-1; i++) {
+    if (tokens[i].type === 'KEYWORD' && tokens[i].val === 'goto' && tokens[i+1].type === 'IDENTIFIER') {
+      gotoUsages.push({label: tokens[i+1].val, line: tokens[i].line});
+    }
+  }
+  
+  // Symbol table
+  const labelSymbols = {};
+  labelDefs.forEach(def => { labelSymbols[def.val] = { type: 'goto_label', defined: true, uses: 0, line: def.line }; });
+  gotoUsages.forEach(u => {
+    if (labelSymbols[u.label]) labelSymbols[u.label].uses++;
+    else if (!labelSymbols[u.label]) labelSymbols[u.label] = { type: 'goto_label', defined: false, uses: 1, line: u.line };
+  });
+  
+  // Duplicate detection
+  const duplicates = [];
+  labelDefs.forEach(def => {
+    if (labelDefMap.get(def.val) > 1 && !duplicates.some(d => d.name === def.val && d.type === 'label')) {
+      duplicates.push({ name: def.val, type: 'label', count: labelDefMap.get(def.val) });
+    }
+  });
+  
+  // Function duplicate detection
+  const funcDefs = [];
+  for (let i = 0; i < tokens.length-2; i++) {
+    if (tokens[i].type === 'KEYWORD' && tokens[i+1].type === 'IDENTIFIER' && tokens[i+2]?.val === '(') {
+      funcDefs.push(tokens[i+1].val);
+    }
+  }
+  const funcDefMap = {};
+  funcDefs.forEach(f => { funcDefMap[f] = (funcDefMap[f] || 0) + 1; });
+  Object.entries(funcDefMap).forEach(([k,v]) => { if (v > 1) duplicates.push({name: k, type: 'function', count: v}); });
+  
+  // Unused labels
+  const unusedLabels = Object.keys(labelSymbols).filter(lbl => labelSymbols[lbl].defined && labelSymbols[lbl].uses === 0);
+  
+  // Phase 6: Reuse Optimization
+  const reuseSuggestions = unusedLabels.map(label => ({
+    label,
+    reason: `Label '${label}' is defined but never used. Available for reuse or removal.`,
+    canReuse: true
+  }));
+  
+  const tacOptimizationNote = unusedLabels.length > 0 
+    ? `♻️ Reuse pool: ${unusedLabels.join(', ')} — these labels can be reassigned or eliminated. Zero-waste recommendation.`
+    : `✅ All labels are actively used. No waste.`;
+  
+  const parseTree = buildParseTree(tokens);
+  
+  return { 
+    tokens, labelDefs, gotoUsages, funcDefs, labelSymbols, duplicates, unusedLabels, 
+    reuseSuggestions, tacOptimizationNote, parseTree, totalLabels: labelDefs.length
+  };
+}
+
+function renderParseTree(node) {
+  if (!node) return "";
+  const getClass = () => {
+    if (node.type === "operator") return "operator";
+    if (node.type === "identifier") return "identifier";
+    if (node.type === "literal") return "literal";
+    return "";
+  };
+  let html = `<div class="tree-node"><div class="tree-node-content ${getClass()}">${esc(node.name)}</div>`;
+  if (node.children && node.children.length) {
+    html += `<div class="tree-children">`;
+    node.children.forEach(child => { html += `<div class="tree-child">${renderParseTree(child)}</div>`; });
+    html += `</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderPhases(data) {
+  const grid = document.getElementById('phases-grid');
+  grid.innerHTML = `
+    <div class="phase-card ph1" id="card1"><div class="phase-header"><div class="phase-num">01</div><div><div class="phase-title">Lexical Analysis</div><div class="phase-subtitle">Tokenization</div></div><div class="phase-badge">SCANNER</div></div><div class="phase-body"><table class="token-table"><thead><tr><th>Line</th><th>Lexeme</th><th>Type</th></tr></thead><tbody>${data.tokens.slice(0,15).map(t => `<tr><td>${t.line}</td><td>${esc(t.val)}</td><td>${t.type}</td></tr>`).join('')}</tbody></table><div class="placeholder-msg">Total: ${data.tokens.length} tokens | Labels: ${data.labelDefs.length}</div></div></div>
+    <div class="phase-card ph2" id="card2"><div class="phase-header"><div class="phase-num">02</div><div><div class="phase-title">Syntax Analysis</div><div class="phase-subtitle">Parse Tree</div></div><div class="phase-badge">PARSER</div></div><div class="phase-body"><div class="parse-tree-container"><div class="tree-root">${renderParseTree(data.parseTree)}</div></div><div class="tree-legend"><span>🟠 Operators</span><span>🔵 Identifiers</span><span>🟢 Literals</span><span>🏷️ Labels</span></div></div></div>
+    <div class="phase-card ph3" id="card3"><div class="phase-header"><div class="phase-num">03</div><div><div class="phase-title">Semantic Analysis</div><div class="phase-subtitle">Label Symbol Table</div></div><div class="phase-badge">SEMANTIC</div></div><div class="phase-body"><table class="symbol-table"><thead><tr><th>Label</th><th>Defined</th><th>Uses</th><th>Status</th></tr></thead><tbody>${Object.entries(data.labelSymbols).map(([k,v]) => `<tr><td>${esc(k)}</td><td>${v.defined ? '✓' : '✗'}</td><td>${v.uses}</td><td class="${v.uses>0?'sym-used':'sym-unused'}">${v.uses>0 ? '🔁 Used' : '💤 Unused'}</td></tr>`).join('')}</tbody></table></div></div>
+    <div class="phase-card ph4" id="card4"><div class="phase-header"><div class="phase-num">04</div><div><div class="phase-title">Duplicate Detection</div><div class="phase-subtitle">Label/Function Conflicts</div></div><div class="phase-badge">VALIDATION</div></div><div class="phase-body"><div class="placeholder-msg" style="color:${data.duplicates.length ? 'var(--red)' : 'var(--green)'}">${data.duplicates.length ? `⚠️ ${data.duplicates.length} duplicate(s): ${data.duplicates.map(d => `${d.name} (${d.type})`).join(', ')}` : '✓ No duplicate labels or functions'}</div></div></div>
+    <div class="phase-card ph5" id="card5"><div class="phase-header"><div class="phase-num">05</div><div><div class="phase-title">Unused Detection</div><div class="phase-subtitle">Dead Code Analysis</div></div><div class="phase-badge">DEAD CODE</div></div><div class="phase-body"><div class="placeholder-msg" style="color:${data.unusedLabels.length ? 'var(--orange)' : 'var(--green)'}">${data.unusedLabels.length ? `⚠️ ${data.unusedLabels.length} unused label(s): ${data.unusedLabels.join(', ')}` : '✓ All labels are referenced'}</div></div></div>
+    <div class="phase-card ph6" id="card6"><div class="phase-header"><div class="phase-num">06</div><div><div class="phase-title">Reuse Optimization + TAC</div><div class="phase-subtitle">Label Recycling Strategy</div></div><div class="phase-badge">REUSE</div></div><div class="phase-body"><div class="placeholder-msg">${data.tacOptimizationNote}<br>${data.reuseSuggestions.length ? data.reuseSuggestions.map(r => `♻️ ${r.reason}`).join('<br>') : '✨ No wasted labels — perfect efficiency.'}</div></div></div>
+  `;
+  for(let i=1;i<=6;i++) document.getElementById(`card${i}`)?.classList.add('visible');
+  for(let i=1;i<=6;i++) document.getElementById(`pl${i}`)?.classList.add('active');
+}
+
+function compile() {
+  const src = document.getElementById('code-input').value;
+  if (!src.trim()) return;
+  const data = compileFull(src);
+  renderPhases(data);
+}
+
+function clearAll() {
+  document.getElementById('code-input').value = '';
+  document.getElementById('phases-grid').innerHTML = '';
+  for(let i=1;i<=6;i++) document.getElementById(`pl${i}`)?.classList.remove('active');
+}
+
+function switchTab(tab) {
+  const compilerTab = document.getElementById('compiler-tab');
+  const testsTab = document.getElementById('tests-tab');
+  const btns = document.querySelectorAll('.tab-btn');
+  if (tab === 'compiler') {
+    compilerTab.style.display = 'block';
+    testsTab.style.display = 'none';
+    btns[0].classList.add('active');
+    btns[1].classList.remove('active');
+  } else {
+    compilerTab.style.display = 'none';
+    testsTab.style.display = 'block';
+    btns[0].classList.remove('active');
+    btns[1].classList.add('active');
+    runAllTests();
+  }
+}
+
+// ==================== TEST CASES (12 comprehensive tests) ====================
+const TEST_CASES = [
+  { name: "✓ Basic labels + usage", code: `int main() { start: int x=0; if(x<2) goto start; return x; }`, expectedUnused: 0, expectedDup: false },
+  { name: "✓ Unused label detection", code: `int main() { used: int a=1; goto used; unused: int b=2; return a; }`, expectedUnused: 1, expectedDup: false },
+  { name: "⚠️ Duplicate label", code: `int main() { dup: int x=1; dup: int y=2; return x; }`, expectedDup: true, expectedUnused: 0 },
+  { name: "✓ Mixed used/unused", code: `int main() { A: int i=0; B: i++; C: if(i<2) goto A; D: return i; }`, expectedUnused: 2, expectedDup: false },
+  { name: "⚠️ Duplicate function", code: `void f(){} void f(){} int main(){return 0;}`, expectedDupFunc: true },
+  { name: "✓ Reuse candidate pool", code: `int main() { active: int x=0; dead1: x=5; dead2: x=10; goto active; return x; }`, expectedUnused: 2, reuseAvailable: true },
+  { name: "✓ All labels used", code: `int main() { L1: int c=0; if(c<1) goto L1; L2: return c; }`, expectedUnused: 0 },
+  { name: "✓ Expression with labels context", code: `int main() { calc: int a=2+3; if(a>0) goto calc; end: return a; }`, expectedUnused: 0 },
+  { name: "⚠️ Multiple duplicates + unused", code: `int main() { dup: int a=1; dup: int b=2; orphan: int c=3; return a; }`, expectedDup: true, expectedUnused: 1 },
+  { name: "✓ No labels", code: `int main() { int x=42; return x; }`, expectedUnused: 0 },
+  { name: "✓ Advanced reuse suggestion", code: `int main() { loop: int i=0; i++; if(i<3) goto loop; spare: int j=0; return i; }`, expectedUnused: 1, reuseAvailable: true },
+  { name: "✓ Function + label coexistence", code: `int add(int a,int b){return a+b;} int main(){ start: int x=add(1,2); goto start; end: return x; }`, expectedUnused: 1 }
+];
+
+function runTest(testCase) {
+  const data = compileFull(testCase.code);
+  let passed = true;
+  const details = [];
+  if (testCase.expectedUnused !== undefined) {
+    const unusedOk = data.unusedLabels.length === testCase.expectedUnused;
+    passed = passed && unusedOk;
+    details.push({ name: `Unused labels = ${testCase.expectedUnused}`, passed: unusedOk, detail: `Found: ${data.unusedLabels.length}` });
+  }
+  if (testCase.expectedDup !== undefined) {
+    const dupLabels = data.duplicates.filter(d => d.type === 'label').length > 0;
+    const dupOk = dupLabels === testCase.expectedDup;
+    passed = passed && dupOk;
+    details.push({ name: `Duplicate labels detection`, passed: dupOk, detail: dupLabels ? "Duplicate found" : "No duplicates" });
+  }
+  if (testCase.expectedDupFunc !== undefined) {
+    const dupFunc = data.duplicates.filter(d => d.type === 'function').length > 0;
+    const dupFuncOk = dupFunc === testCase.expectedDupFunc;
+    passed = passed && dupFuncOk;
+    details.push({ name: `Duplicate functions`, passed: dupFuncOk, detail: dupFunc ? "Duplicate function detected" : "No duplicate functions" });
+  }
+  if (testCase.reuseAvailable !== undefined) {
+    const hasReuse = data.reuseSuggestions.length > 0;
+    details.push({ name: `Reuse candidates`, passed: hasReuse === testCase.reuseAvailable, detail: hasReuse ? "Unused labels available for recycling" : "No unused labels" });
+    passed = passed && (hasReuse === testCase.reuseAvailable);
+  }
+  details.push({ name: "Overall", passed: passed, detail: passed ? "All checks passed" : "Some checks failed" });
+  return details;
+}
+
+function renderTestCard(testCase, idx) {
+  const results = runTest(testCase);
+  const allPassed = results.every(r => r.passed);
+  return `<div class="test-card ${allPassed ? 'passed' : 'failed'}" data-test-index="${idx}">
+      <div class="test-card-header" onclick="toggleTestBody(${idx})">
+        <span class="test-name">${testCase.name}</span>
+        <span class="test-status ${allPassed ? 'status-pass' : 'status-fail'}">${allPassed ? '✓ PASSED' : '✗ FAILED'}</span>
+      </div>
+      <div class="test-body" id="test-body-${idx}">
+        <div class="test-input">${esc(testCase.code)}</div>
+        <div class="test-results">${results.map(r => `<div class="test-result-item"><span class="${r.passed ? 'test-result-pass' : 'test-result-fail'}">${r.passed ? '✓' : '✗'}</span> ${r.name}: ${r.detail}</div>`).join('')}</div>
+      </div>
+    </div>`;
+}
+
+function runAllTests() {
+  const grid = document.getElementById('test-grid');
+  grid.innerHTML = TEST_CASES.map((tc, i) => renderTestCard(tc, i)).join('');
+}
+
+function toggleTestBody(index) {
+  const body = document.getElementById(`test-body-${index}`);
+  if (body) body.classList.toggle('show');
+}
+
+window.addEventListener('load', () => {
+  compile();
+  runAllTests();
+});
+</script>
+</body>
+</html>
