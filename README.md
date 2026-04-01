@@ -2,7 +2,13 @@
 
 **Automata Theory & Compiler Design (CS 301) — 6-Phase Label Management System**
 
+![ATCD Label Compiler GUI Demo](demo.webp)
+*Compiler pipeline dynamically analyzing custom C++ label statements.*
+
 A single-page, premium web-based graphical user interface that implements a complete compiler pipeline for parsing, validating, and optimizing `goto` labels in C++ source code. The project emphasizes advanced parsing logic, structural semantic analysis, dead code elimination (unused label reuse), and modern UI/UX design.
+
+![Test Suite Results](screenshot.png)
+*Built-in Test Suite validating 12 unique state machine management edge cases.*
 
 ## 🚀 Features
 
